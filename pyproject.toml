@@ -10,6 +10,7 @@ dependencies = [
     "whatthepatch>=1.0.7",
     "pre-commit>=3.5.0",
     "ruff>=0.11.0",
+    "basedpyright>=1.29.1",
 ]
 
 [tool.ruff]
@@ -31,3 +32,25 @@ quote-style = "single"
 indent-style = "space"
 line-ending = "auto"
 docstring-code-format = true
+
+[tool.basedpyright]
+# scope
+include = ["main.py"]
+exclude = ["tests", "**/__pycache__"]
+
+# runtime assumptions
+pythonVersion = "3.11"
+venvPath = "."
+
+# global strictness
+typeCheckingMode = "strict"
+failOnWarnings = false
+
+# hard-ban dangerous gaps
+reportAny = "error"
+reportMissingImports = "error"
+reportUnreachable = "warning"
+
+# noise reduction
+reportUnusedImport = "warning"
+reportUnusedVariable = "warning"

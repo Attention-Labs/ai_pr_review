@@ -2,10 +2,15 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.11.10
     hooks:
+      # Run the formatter first to fix what it can
+      - id: ruff-format
+        types_or: [python, pyi]
       # Run the linter with auto-fix
       - id: ruff-check
         types_or: [python, pyi]
         args: [--fix]
-      # Run the formatter
-      - id: ruff-format
-        types_or: [python, pyi]
+        
+  - repo: https://github.com/DetachHead/basedpyright-pre-commit-mirror
+    rev: 1.29.1
+    hooks:
+    - id: basedpyright
