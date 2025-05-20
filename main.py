@@ -10,7 +10,6 @@ from kit import Repository
 from openai import OpenAI
 from whatthepatch import parse_patch  # Changed from unidiff
 
-
 load_dotenv()
 
 # --- Configuration ---
@@ -67,13 +66,12 @@ def clone_repo_to_temp_dir(repo_owner, repo_name, keep_temp=False):
     print(f'Creating temporary directory for {repo_owner}/{repo_name}...')
     temp_dir = tempfile.mkdtemp(prefix=f'ai_pr_review_{repo_owner}_{repo_name}_')
     print(f'Temporary directory created: {temp_dir}')
-    
+
     try:
         repo_url = f'https://github.com/{repo_owner}/{repo_name}.git'
         print(f'Cloning repository {repo_url}...')
         subprocess.run(
-            ['git', 'clone', repo_url, temp_dir],
-            check=True, capture_output=True
+            ['git', 'clone', repo_url, temp_dir], check=True, capture_output=True
         )
         print(f'Successfully cloned repository to {temp_dir}')
         return temp_dir
@@ -90,12 +88,10 @@ def checkout_pr_head(temp_dir, pr_head_sha):
     try:
         print(f'Fetching and checking out PR head SHA: {pr_head_sha}...')
         subprocess.run(
-            ['git', 'fetch', 'origin', pr_head_sha], 
-            check=True, capture_output=True
+            ['git', 'fetch', 'origin', pr_head_sha], check=True, capture_output=True
         )
         subprocess.run(
-            ['git', 'checkout', pr_head_sha], 
-            check=True, capture_output=True
+            ['git', 'checkout', pr_head_sha], check=True, capture_output=True
         )
         print(f'Successfully checked out {pr_head_sha}.')
     except subprocess.CalledProcessError as e:
@@ -121,10 +117,10 @@ def review_pr(repo_owner, repo_name, pr_number, keep_temp=False):
         diff_text, head_sha, pr_title, pr_description = fetch_pr_data(
             repo_owner, repo_name, pr_number
         )
-        
+
         # Clone repository to temporary directory
         temp_dir = clone_repo_to_temp_dir(repo_owner, repo_name, keep_temp)
-        
+
         # Checkout PR head
         checkout_pr_head(temp_dir, head_sha)
 
@@ -156,7 +152,8 @@ def review_pr(repo_owner, repo_name, pr_number, keep_temp=False):
                 not file_path_in_pr
             ):  # Should not happen if not removed, but as a safeguard
                 print(
-                    f'- Warning: No new_path for a non-removed file object (old: {diff_obj.header.old_path}). Skipping.'
+                    f'- Warning: No new_path for a non-removed file object '
+                    f'(old: {diff_obj.header.old_path}). Skipping.'
                 )
                 continue
 
@@ -168,11 +165,13 @@ def review_pr(repo_owner, repo_name, pr_number, keep_temp=False):
                     print(f'- Added full content of changed file: {file_path_in_pr}')
                 else:
                     print(
-                        f'- Warning: Changed file {file_path_in_pr} not found on disk at {full_path_on_disk}. Diff will be primary source.'
+                        f'- Warning: Changed file {file_path_in_pr} not found on disk '
+                        f'at {full_path_on_disk}. Diff will be primary source.'
                     )
             except Exception as e:
                 print(
-                    f'- Error adding file {file_path_in_pr} to context: {e}. Diff will be primary source.'
+                    f'- Error adding file {file_path_in_pr} to context: {e}. '
+                    f'Diff will be primary source.'
                 )
 
             # 3. Add parent symbol of each changed hunk
@@ -180,7 +179,7 @@ def review_pr(repo_owner, repo_name, pr_number, keep_temp=False):
             hunks_data = {}  # Key: hunk_index, Value: list of Change objects
             if diff_obj.changes:  # Ensure there are changes
                 for change in diff_obj.changes:
-                    # change is a namedtuple: (old_line_no, new_line_no, line_content, hunk_no)
+                    # change: namedtuple (old_line_no, new_line_no, line_content, hunk_no)
                     if change.hunk not in hunks_data:
                         hunks_data[change.hunk] = []
                     hunks_data[change.hunk].append(change)
@@ -213,10 +212,16 @@ def review_pr(repo_owner, repo_name, pr_number, keep_temp=False):
                                 parent_symbol_info.get('start_line'),
                             )
                             if symbol_identifier not in processed_parent_symbols:
+                                symbol_name = parent_symbol_info.get(
+                                    'name', 'Unnamed Symbol'
+                                )
+                                start_line = parent_symbol_info.get('start_line', '?')
+                                end_line = parent_symbol_info.get('end_line', '?')
                                 chunk_description = (
-                                    f"Context: Symbol '{parent_symbol_info.get('name', 'Unnamed Symbol')}' "
-                                    f'in {file_path_in_pr} (lines {parent_symbol_info.get("start_line", "?")}-{parent_symbol_info.get("end_line", "?")}) '
-                                    f'related to changes starting around line {first_new_line_in_hunk} in the new file.'
+                                    f"Context: Symbol '{symbol_name}' "
+                                    f'in {file_path_in_pr} (lines {start_line}-{end_line}) '
+                                    f'related to changes starting around line {first_new_line_in_hunk} '
+                                    f'in the new file.'
                                 )
                                 parent_chunk = {
                                     'code': parent_symbol_info['code'],
@@ -225,12 +230,15 @@ def review_pr(repo_owner, repo_name, pr_number, keep_temp=False):
                                 }
                                 assembler.add_file(parent_chunk)
                                 processed_parent_symbols.add(symbol_identifier)
+                                symbol_name = parent_symbol_info.get('name', 'Unnamed')
                                 print(
-                                    f'  - Added parent symbol context: {parent_symbol_info.get("name", "Unnamed")} from {file_path_in_pr} for hunk {hunk_idx}'
+                                    f'  - Added parent symbol context: {symbol_name} '
+                                    f'from {file_path_in_pr} for hunk {hunk_idx}'
                                 )
                     except Exception as e:
                         print(
-                            f'  - Error extracting parent symbol for hunk {hunk_idx} in {file_path_in_pr}: {e}'
+                            f'  - Error extracting parent symbol for hunk {hunk_idx} '
+                            f'in {file_path_in_pr}: {e}'
                         )
 
         context_blob = assembler.format_context()
@@ -242,8 +250,9 @@ def review_pr(repo_owner, repo_name, pr_number, keep_temp=False):
         print('\nSending context to LLM for review...')
         system_prompt = (
             'You are an expert software engineer performing a pull request review. '
-            'Focus on correctness, clarity, potential bugs, adherence to best practices, '
-            'and areas for improvement. Be concise and actionable. '
+            'Focus on correctness, clarity, potential bugs, '
+            'adherence to best practices, and areas for improvement. '
+            'Be concise and actionable. '
             'Structure your review clearly, perhaps by file or by general concern. '
             'If you suggest code changes, use markdown code blocks.'
         )
@@ -288,8 +297,9 @@ if __name__ == '__main__':
     )
     parser.add_argument('pr_number', type=int, help='Pull Request number')
     parser.add_argument(
-        '--keep-temp', action='store_true', 
-        help='Keep the temporary repository after execution (for debugging)'
+        '--keep-temp',
+        action='store_true',
+        help='Keep the temporary repository after execution (for debugging)',
     )
 
     args = parser.parse_args()
