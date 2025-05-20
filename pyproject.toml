@@ -1,0 +1,56 @@
+[project]
+name = "ai-pr-review"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "cased-kit>=0.3.2",
+    "python-dotenv>=1.1.0",
+    "whatthepatch>=1.0.7",
+    "pre-commit>=3.5.0",
+    "ruff>=0.11.0",
+    "basedpyright>=1.29.1",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+# Enable Pyflakes (F), pycodestyle (E), isort (I), and flake8-bugbear (B) rules
+select = ["E", "F", "B", "I"]
+# Ignore line length errors
+ignore = ["E501"]
+# Allow autofix for all enabled rules
+fixable = ["ALL"]
+# Allow unused variables when underscore-prefixed
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+line-ending = "auto"
+docstring-code-format = true
+
+[tool.basedpyright]
+# scope
+include = ["main.py"]
+exclude = ["tests", "**/__pycache__"]
+
+# runtime assumptions
+pythonVersion = "3.11"
+venvPath = "."
+
+# global strictness
+typeCheckingMode = "strict"
+failOnWarnings = false
+
+# hard-ban dangerous gaps
+reportAny = "error"
+reportMissingImports = "error"
+reportUnreachable = "warning"
+
+# noise reduction
+reportUnusedImport = "warning"
+reportUnusedVariable = "warning"

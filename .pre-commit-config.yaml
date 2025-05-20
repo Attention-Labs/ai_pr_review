@@ -1,0 +1,19 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.10
+    hooks:
+      # Run the formatter first to fix what it can
+      - id: ruff-format
+        types_or: [python, pyi]
+      # Run the linter with auto-fix
+      - id: ruff-check
+        types_or: [python, pyi]
+        args: [--fix]
+        
+  - repo: local
+    hooks:
+      - id: basedpyright
+        name: basedpyright (uv run, shared env)
+        entry: uv run -m basedpyright
+        language: system  # Disables hook-specific venv
+        pass_filenames: false
