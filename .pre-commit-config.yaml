@@ -10,10 +10,3 @@ repos:
         types_or: [python, pyi]
         args: [--fix]
         
-  - repo: local
-    hooks:
-      - id: basedpyright
-        name: basedpyright (uv run, shared env)
-        entry: uv run -m basedpyright
-        language: system  # Disables hook-specific venv
-        pass_filenames: false

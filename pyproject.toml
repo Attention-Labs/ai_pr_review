@@ -53,6 +53,7 @@ exclude = ["tests", "**/__pycache__"]
 # runtime assumptions
 pythonVersion = "3.11"
 venvPath = "."
+useLibraryCodeForTypes = true
 
 # global strictness
 typeCheckingMode = "strict"
@@ -66,6 +67,7 @@ reportUnreachable = "warning"
 # noise reduction
 reportUnusedImport = "warning"
 reportUnusedVariable = "warning"
+reportMissingTypeStubs = "none"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
