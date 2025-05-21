@@ -13,6 +13,16 @@ dependencies = [
     "basedpyright>=1.29.1",
 ]
 
+[project.scripts]
+ai-pr-review = "ai_pr_review.main:main"
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.ruff]
 line-length = 88
 target-version = "py311"
@@ -35,7 +45,7 @@ docstring-code-format = true
 
 [tool.basedpyright]
 # scope
-include = ["main.py"]
+include = ["src"]
 exclude = ["tests", "**/__pycache__"]
 
 # runtime assumptions
