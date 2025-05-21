@@ -30,12 +30,12 @@ AI PR Review analyzes GitHub pull requests and provides detailed feedback using 
 ## Usage
 
 ```bash
-python main.py <repo_owner> <repo_name> <pr_number>
+python -m ai_pr_review <repo_owner> <repo_name> <pr_number>
 ```
 
 Example:
 ```bash
-python main.py octocat hello-world 42
+python -m ai_pr_review octocat hello-world 42
 ```
 
 ## Requirements
