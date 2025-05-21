@@ -12,6 +12,8 @@ dependencies = [
     "ruff>=0.11.0",
     "basedpyright>=1.29.1",
 ]
+packages = [{include = "ai_pr_review", from = "src"}]
+scripts = {ai-pr-review = "ai_pr_review.__main__:main"}
 
 [tool.ruff]
 line-length = 88
@@ -35,7 +37,7 @@ docstring-code-format = true
 
 [tool.basedpyright]
 # scope
-include = ["main.py"]
+include = ["src"]
 exclude = ["tests", "**/__pycache__"]
 
 # runtime assumptions

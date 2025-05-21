@@ -1,6 +1,6 @@
 {
     "files": {
-        "./main.py": [
+        "./src/ai_pr_review/__main__.py": [
             {
                 "code": "reportMissingTypeStubs",
                 "range": {

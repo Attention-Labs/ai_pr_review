@@ -285,7 +285,8 @@ def review_pr(repo_owner, repo_name, pr_number, keep_temp=False):
             cleanup_temp_dir(temp_dir, keep_temp)
 
 
-if __name__ == '__main__':
+def main(cli_args: list[str] | None = None) -> None:
+    """Entry point for the command line interface."""
     parser = argparse.ArgumentParser(
         description='AI PR Reviewer using Kit and whatthepatch (Version 1)'
     )
@@ -302,5 +303,9 @@ if __name__ == '__main__':
         help='Keep the temporary repository after execution (for debugging)',
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(cli_args)
     review_pr(args.repo_owner, args.repo_name, args.pr_number, args.keep_temp)
+
+
+if __name__ == '__main__':
+    main()
