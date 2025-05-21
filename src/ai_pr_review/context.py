@@ -1,26 +1,31 @@
 from __future__ import annotations
 
 import os
-from typing import Any, List, Optional, cast
+from typing import List, Optional, cast
 
-from kit import Repository
+from kit import ContextAssembler, Repository
 from whatthepatch import parse_patch
+from whatthepatch.patch import Change, diffobj
 
 
-def initialize_repo_and_assembler(repo_path: str) -> tuple[Repository, Any]:
+def initialize_repo_and_assembler(
+    repo_path: str,
+) -> tuple[Repository, ContextAssembler]:
     """Initialize repository and context assembler."""
     repo = Repository(repo_path)
     return repo, repo.get_context_assembler()
 
 
-def add_diff_to_assembler(assembler: Any, diff_text: str) -> None:
+def add_diff_to_assembler(assembler: ContextAssembler, diff_text: str) -> None:
     """Add diff to context assembler."""
     assembler.add_diff(diff_text)
 
 
-def add_files_from_diff(assembler: Any, temp_dir: str, diff_text: str) -> None:
+def add_files_from_diff(
+    assembler: ContextAssembler, temp_dir: str, diff_text: str
+) -> None:
     """Add files from diff to context assembler."""
-    parsed_diffs = list(parse_patch(diff_text))
+    parsed_diffs: list[diffobj] = list(parse_patch(diff_text))
 
     for diff_obj in parsed_diffs:
         if diff_obj.header is None:
@@ -47,10 +52,10 @@ def add_files_from_diff(assembler: Any, temp_dir: str, diff_text: str) -> None:
 
 
 def extract_parent_symbols(
-    assembler: Any, repo: Repository, temp_dir: str, diff_text: str
+    assembler: ContextAssembler, repo: Repository, temp_dir: str, diff_text: str
 ) -> None:
     """Extract parent symbols from changed lines for additional context."""
-    parsed_diffs = list(parse_patch(diff_text))
+    parsed_diffs: list[diffobj] = list(parse_patch(diff_text))
     processed_parent_symbols: set[tuple[str, str | None, int | None]] = set()
 
     for diff_obj in parsed_diffs:
@@ -69,7 +74,7 @@ def extract_parent_symbols(
         if is_removed_file or not file_path_in_pr:
             continue
 
-        hunks_data: dict[int, List[Any]] = {}
+        hunks_data: dict[int, List[Change]] = {}
         if diff_obj.changes:
             for change in diff_obj.changes:
                 if change.hunk not in hunks_data:
@@ -107,7 +112,6 @@ def extract_parent_symbols(
                                 'path': file_path_in_pr,
                                 'description': 'parent symbol context',
                             }
-                            # Use cast to silence type error
                             assembler.add_file(cast(str, parent_chunk))
                             processed_parent_symbols.add(symbol_identifier)
                 except Exception:
@@ -129,4 +133,4 @@ def process_pr_context(repo_path: str, diff_text: str) -> str:
 
     # Format and return the assembled context
     context = assembler.format_context()
-    return cast(str, context)
+    return context

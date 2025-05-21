@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Tuple
+from typing import Any, Tuple, cast
 
 import requests
 from dotenv import load_dotenv
@@ -35,10 +35,10 @@ def fetch_pr_data(
         meta_headers['Accept'] = 'application/vnd.github.v3+json'
         response_meta = requests.get(base_url, headers=meta_headers)
         response_meta.raise_for_status()
-        pr_metadata = response_meta.json()
-        head_sha = pr_metadata['head']['sha']
-        pr_title = pr_metadata.get('title', '')
-        pr_description = pr_metadata.get('body', '')
+        pr_metadata = cast(dict[str, Any], response_meta.json())
+        head_sha = cast(str, pr_metadata['head']['sha'])
+        pr_title = cast(str, pr_metadata.get('title', ''))
+        pr_description = cast(str, pr_metadata.get('body', ''))
         return diff_text, head_sha, pr_title, pr_description
     except requests.exceptions.RequestException as e:  # pragma: no cover - network
         raise GitHubError(f'Error fetching PR data: {e}') from e
