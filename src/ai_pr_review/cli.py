@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from typing import cast
 
 from .errors import ReviewError
 from .review import review_pr
@@ -28,7 +29,10 @@ def main(cli_args: list[str] | None = None) -> None:
     args = parser.parse_args(cli_args)
     try:
         review_text = review_pr(
-            args.repo_owner, args.repo_name, args.pr_number, args.keep_temp
+            cast(str, args.repo_owner),
+            cast(str, args.repo_name),
+            cast(int, args.pr_number),
+            cast(bool, args.keep_temp),
         )
         print('\n--- AI PR Review (whatthepatch version) ---')
         print(review_text)
