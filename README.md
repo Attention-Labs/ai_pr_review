@@ -30,8 +30,9 @@ AI PR Review analyzes GitHub pull requests and provides detailed feedback using 
 ## Usage
 
 ```bash
-python -m ai_pr_review <repo_owner> <repo_name> <pr_number>
+python -m ai_pr_review [--model MODEL] <repo_owner> <repo_name> <pr_number>
 ```
+Use `--model` to choose the OpenAI model (defaults to `gpt-4.1`).
 
 Example:
 ```bash

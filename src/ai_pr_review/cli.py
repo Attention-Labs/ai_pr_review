@@ -25,6 +25,11 @@ def main(cli_args: list[str] | None = None) -> None:
         action='store_true',
         help='Keep the temporary repository after execution (for debugging)',
     )
+    parser.add_argument(
+        '--model',
+        default='gpt-4.1',
+        help='OpenAI model to use for generating the review',
+    )
 
     args = parser.parse_args(cli_args)
     try:
@@ -33,6 +38,7 @@ def main(cli_args: list[str] | None = None) -> None:
             cast(str, args.repo_name),
             cast(int, args.pr_number),
             cast(bool, args.keep_temp),
+            cast(str, args.model),
         )
         print('\n--- AI PR Review (whatthepatch version) ---')
         print(review_text)
