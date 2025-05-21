@@ -7,7 +7,11 @@ from .repo import checkout_pr_head, cleanup_temp_dir, clone_repo_to_temp_dir
 
 
 def review_pr(
-    repo_owner: str, repo_name: str, pr_number: int, keep_temp: bool = False
+    repo_owner: str,
+    repo_name: str,
+    pr_number: int,
+    keep_temp: bool = False,
+    model: str = 'gpt-4.1',
 ) -> str:
     """Generate an AI-based review for the pull request."""
     temp_dir: str | None = None
@@ -25,7 +29,12 @@ def review_pr(
         context_blob = process_pr_context(temp_dir, diff_text)
 
         # Generate PR review using LLM
-        review_text = review_with_llm(pr_title, pr_description, context_blob)
+        review_text = review_with_llm(
+            pr_title,
+            pr_description,
+            context_blob,
+            model=model,
+        )
 
         return review_text
     finally:
