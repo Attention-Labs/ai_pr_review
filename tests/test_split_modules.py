@@ -1,4 +1,3 @@
-import os
 import subprocess
 
 import pytest
@@ -10,8 +9,6 @@ from ai_pr_review.repo import clone_repo_to_temp_dir
 
 
 def test_fetch_pr_data_error(monkeypatch):
-    os.environ.setdefault('OPENAI_API_KEY', 'dummy')
-
     def raise_request(*_a, **_kw):
         raise requests.exceptions.RequestException('boom')
 

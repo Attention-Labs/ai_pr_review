@@ -20,13 +20,14 @@ def mock_openai_client():
     return client
 
 
-def test_setup_openai_client():
+def test_setup_openai_client(monkeypatch):
     """Test setting up OpenAI client."""
     with patch('ai_pr_review.llm.OpenAI') as mock_openai:
+        monkeypatch.setenv('OPENAI_API_KEY', 'dummy')
         setup_openai_client()
         mock_openai.assert_called_once()
         # Verify API key is passed
-        assert mock_openai.call_args[1]['api_key'] is not None
+        assert mock_openai.call_args[1]['api_key'] == 'dummy'
 
 
 def test_create_review_prompts():

@@ -11,15 +11,19 @@ from .errors import ConfigurationError
 # Load environment variables
 load_dotenv()
 
-# Check for API key and initialize client
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-if not OPENAI_API_KEY:
-    raise ConfigurationError('OPENAI_API_KEY environment variable not set.')
+
+def _get_openai_api_key() -> str:
+    """Return the OpenAI API key from the environment or raise an error."""
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        raise ConfigurationError('OPENAI_API_KEY environment variable not set.')
+    return api_key
 
 
 def setup_openai_client() -> OpenAI:
     """Set up and return OpenAI client."""
-    return OpenAI(api_key=OPENAI_API_KEY)
+    api_key = _get_openai_api_key()
+    return OpenAI(api_key=api_key)
 
 
 def create_review_prompts(
