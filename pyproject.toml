@@ -56,3 +56,6 @@ reportUnreachable = "warning"
 # noise reduction
 reportUnusedImport = "warning"
 reportUnusedVariable = "warning"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
