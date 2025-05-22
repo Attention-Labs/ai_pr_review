@@ -9,4 +9,12 @@ repos:
       - id: ruff-check
         types_or: [python, pyi]
         args: [--fix]
+  - repo: local
+    hooks:
+      - id: sync-guidelines
+        name: Sync CLAUDE.md and AGENTS.md
+        entry: scripts/sync_guidelines.py
+        language: system
+        pass_filenames: false
+        always_run: true
         
