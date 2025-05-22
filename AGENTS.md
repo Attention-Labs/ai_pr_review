@@ -15,12 +15,14 @@ before committing changes.
 - Install the pre-commit hooks with `pre-commit install` to ensure `AGENTS.md` and `CLAUDE.md` stay synchronized and we only commit clean code.
 - Run `uv run ruff check --fix src tests` before committing to ensure code style.
 - Run `uv run pytest -q` to execute the test suite.
-
- - Run `uv run -m ai_pr_review <repo_owner> <repo_name> <pr_number>` to review a PR.
- - Run `uv run basedpyright` and resolve any reported issues before committing.
-
+- Run `uv run -m ai_pr_review <repo_owner> <repo_name> <pr_number>` to review a PR.
+- Run `uv run basedpyright` and resolve any reported issues before committing.
 - Prefer `rg` over `grep` for searching the codebase.
-- Use `logkit` for all logging: call `new_context()` once per entry point and wrap main work in `capture()`.
+- Use `logkit` for all logging:
+  - `from logkit import log, new_context, capture`
+  - Call `new_context()` once at every entry point (CLI command, test case, etc.).
+  - Wrap the primary work in `capture()` to emit a success/error record.
+  - See `docs/logging.md` for details on configuration and debugging tips.
 
 If any directory layout or workflow step described here changes in a commit or
 PR, update `AGENTS.md` as part of that same change so this file stays accurate.

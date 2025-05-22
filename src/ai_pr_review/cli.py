@@ -4,15 +4,10 @@ import argparse
 import sys
 from typing import cast
 
-from structlog.typing import FilteringBoundLogger
-
-from logkit import capture, new_context
-from logkit import log as _log  # type: ignore
+from logkit import capture, log, new_context
 
 from .errors import ReviewError
 from .review import review_pr
-
-log: FilteringBoundLogger = cast(FilteringBoundLogger, _log)
 
 
 def main(cli_args: list[str] | None = None) -> None:
@@ -40,6 +35,7 @@ def main(cli_args: list[str] | None = None) -> None:
     )
 
     args = parser.parse_args(cli_args)
+    review_text: str | None = None
     try:
         with capture(cli='run'):
             review_text = review_pr(

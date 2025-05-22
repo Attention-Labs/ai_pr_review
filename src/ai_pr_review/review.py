@@ -1,18 +1,13 @@
 from __future__ import annotations
 
-from typing import Callable, cast
+from typing import Callable
 
-from structlog.typing import FilteringBoundLogger
-
-from logkit import capture
-from logkit import log as _log  # type: ignore
+from logkit import capture, log
 
 from .context import process_pr_context
 from .github import fetch_pr_data
 from .llm import review_with_llm
 from .repo import checkout_pr_head, cleanup_temp_dir, clone_repo_to_temp_dir
-
-log: FilteringBoundLogger = cast(FilteringBoundLogger, _log)
 
 
 def review_pr(
@@ -33,6 +28,7 @@ def review_pr(
 ) -> str:
     """Generate an AI-based review for the pull request."""
     temp_dir: str | None = None
+    review_text: str | None = None
     with capture(work='review_pr'):
         try:
             # Fetch PR data from GitHub
@@ -58,8 +54,8 @@ def review_pr(
                 model=model,
             )
             log.info('generated review')
-
-            return review_text
         finally:
             if temp_dir:
                 cleanup_func(temp_dir, keep_temp)
+    assert review_text is not None
+    return review_text
