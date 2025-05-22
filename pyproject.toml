@@ -15,6 +15,7 @@ dependencies = [
     "pre-commit>=3.5.0",
     "ruff>=0.11.0",
     "basedpyright>=1.29.1",
+    "structlog>=25.3.0",
 ]
 
 [project.scripts]
