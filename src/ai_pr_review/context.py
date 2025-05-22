@@ -1,136 +1,130 @@
 from __future__ import annotations
 
 import os
-from typing import List, Optional, cast
+from typing import Any, Optional, Set, cast
 
-from kit import ContextAssembler, Repository
+from kit import Repository
 from whatthepatch import parse_patch
-from whatthepatch.patch import Change, diffobj
+from whatthepatch.patch import Change
 
 
-def initialize_repo_and_assembler(
-    repo_path: str,
-) -> tuple[Repository, ContextAssembler]:
-    """Initialize repository and context assembler."""
-    repo = Repository(repo_path)
-    return repo, repo.get_context_assembler()
+class _MiniHunk:
+    def __init__(self, target_start: int):
+        self.target_start = target_start
 
 
-def add_diff_to_assembler(assembler: ContextAssembler, diff_text: str) -> None:
-    """Add diff to context assembler."""
-    assembler.add_diff(diff_text)
+class _MiniPatchFile:
+    def __init__(self, path: str, removed: bool, hunks: list[_MiniHunk]):
+        self.path = path
+        self.is_removed_file = removed
+        self._hunks = hunks
+
+    def __iter__(self):
+        return iter(self._hunks)
 
 
-def add_files_from_diff(
-    assembler: ContextAssembler, temp_dir: str, diff_text: str
-) -> None:
-    """Add files from diff to context assembler."""
-    parsed_diffs: list[diffobj] = list(parse_patch(diff_text))
-
-    for diff_obj in parsed_diffs:
-        if diff_obj.header is None:
+def _parse_patchset(diff_text: str) -> list[_MiniPatchFile]:
+    files: list[_MiniPatchFile] = []
+    for diff in parse_patch(diff_text):
+        if diff.header is None:
             continue
 
-        file_path_in_pr = diff_obj.header.new_path if diff_obj.header.new_path else None
-        if file_path_in_pr is None:
-            continue
+        new_path = diff.header.new_path
+        old_path = diff.header.old_path
+        file_path = new_path or old_path
+        removed = (new_path in (None, '/dev/null')) or (old_path and not new_path)
 
-        old_path = diff_obj.header.old_path if diff_obj.header.old_path else None
-        is_removed_file = (file_path_in_pr == '/dev/null') or (
-            old_path and not file_path_in_pr
-        )
+        hunks: dict[int, list[Change]] = {}
+        if diff.changes:
+            for ch in diff.changes:
+                hunks.setdefault(ch.hunk, []).append(ch)
 
-        if is_removed_file or not file_path_in_pr:
-            continue
+        parsed_hunks: list[_MiniHunk] = []
+        for changes in hunks.values():
+            target_start: int | None = None
+            for ch in changes:
+                if ch.new is not None and (
+                    target_start is None or ch.new < target_start
+                ):
+                    target_start = ch.new
+            if target_start is not None:
+                parsed_hunks.append(_MiniHunk(target_start))
 
-        try:
-            full_path_on_disk = os.path.join(temp_dir, file_path_in_pr)
-            if os.path.exists(full_path_on_disk):
-                assembler.add_file(file_path_in_pr)
-        except Exception:
-            pass
+        if file_path:
+            files.append(_MiniPatchFile(file_path, removed, parsed_hunks))
+
+    return files
 
 
-def extract_parent_symbols(
-    assembler: ContextAssembler, repo: Repository, temp_dir: str, diff_text: str
-) -> None:
-    """Extract parent symbols from changed lines for additional context."""
-    parsed_diffs: list[diffobj] = list(parse_patch(diff_text))
-    processed_parent_symbols: set[tuple[str, str | None, int | None]] = set()
-
-    for diff_obj in parsed_diffs:
-        if diff_obj.header is None:
-            continue
-
-        file_path_in_pr = diff_obj.header.new_path if diff_obj.header.new_path else None
-        if file_path_in_pr is None:
-            continue
-
-        old_path = diff_obj.header.old_path if diff_obj.header.old_path else None
-        is_removed_file = (file_path_in_pr == '/dev/null') or (
-            old_path and not file_path_in_pr
-        )
-
-        if is_removed_file or not file_path_in_pr:
-            continue
-
-        hunks_data: dict[int, List[Change]] = {}
-        if diff_obj.changes:
-            for change in diff_obj.changes:
-                if change.hunk not in hunks_data:
-                    hunks_data[change.hunk] = []
-                hunks_data[change.hunk].append(change)
-
-        for _hunk_idx, changes_in_hunk in hunks_data.items():
-            first_new_line_in_hunk: Optional[int] = None
-            for ch in changes_in_hunk:
-                if hasattr(ch, 'new') and ch.new is not None:
-                    if (
-                        first_new_line_in_hunk is None
-                        or ch.new < first_new_line_in_hunk
-                    ):
-                        first_new_line_in_hunk = ch.new
-
-            if first_new_line_in_hunk is not None:
-                target_line_0_indexed = first_new_line_in_hunk - 1
-                if target_line_0_indexed < 0:
-                    continue
-
-                try:
-                    parent_symbol_info = repo.extract_context_around_line(
-                        file_path_in_pr, target_line_0_indexed
-                    )
-                    if parent_symbol_info and parent_symbol_info.get('code'):
-                        symbol_identifier = (
-                            file_path_in_pr,
-                            parent_symbol_info.get('name'),
-                            parent_symbol_info.get('start_line'),
-                        )
-                        if symbol_identifier not in processed_parent_symbols:
-                            parent_chunk = {
-                                'code': parent_symbol_info['code'],
-                                'path': file_path_in_pr,
-                                'description': 'parent symbol context',
-                            }
-                            assembler.add_file(cast(str, parent_chunk))
-                            processed_parent_symbols.add(symbol_identifier)
-                except Exception:
-                    pass
+def _safe_parent_context(
+    repo: Repository, file_path: str, one_based_line: int
+) -> Optional[dict[str, Any]]:
+    """Return a {'name', 'code', 'start_line'} dict for the symbol that
+    encloses `one_based_line` in `file_path`, or None if not found."""
+    try:
+        return repo.extract_context_around_line(file_path, one_based_line - 1)
+    except Exception:
+        return None
 
 
 def process_pr_context(repo_path: str, diff_text: str) -> str:
-    """Process PR diff and assemble context from changed files and relevant symbols."""
-    repo, assembler = initialize_repo_and_assembler(repo_path)
+    """Build an LLM-ready context string for a PR diff."""
+    repo = Repository(repo_path)
+    assembler = repo.get_context_assembler()
 
-    # Add diff to assembler
-    add_diff_to_assembler(assembler, diff_text)
+    # 1️⃣  Raw diff – always first so the model sees the exact edits.
+    assembler.add_diff(diff_text)
 
-    # Add changed files to context
-    add_files_from_diff(assembler, repo_path, diff_text)
+    patch = _parse_patchset(diff_text)
 
-    # Extract parent symbols for additional context
-    extract_parent_symbols(assembler, repo, repo_path, diff_text)
+    seen_files: Set[str] = set()
+    touched_symbols: Set[str] = set()
 
-    # Format and return the assembled context
-    context = assembler.format_context()
-    return context
+    for pfile in patch:
+        if pfile.is_removed_file:
+            continue
+
+        file_path = pfile.path
+        if not file_path:
+            continue
+
+        if file_path not in seen_files and os.path.exists(
+            os.path.join(repo_path, file_path)
+        ):
+            assembler.add_file(file_path, highlight_changes=True, max_lines=400)
+            add_deps = getattr(assembler, 'add_symbol_dependencies', None)
+            if callable(add_deps):
+                add_deps(file_path, max_depth=1)
+            seen_files.add(file_path)
+
+        hunk = next(iter(pfile), None)
+        if hunk and hunk.target_start:
+            parent_ctx = _safe_parent_context(repo, file_path, hunk.target_start)
+            if parent_ctx and parent_ctx.get('code'):
+                assembler.add_search_results(
+                    [{'file': file_path, 'code': parent_ctx['code']}],
+                    query='parent symbol context',
+                )
+                if parent_ctx.get('name'):
+                    touched_symbols.add(cast(str, parent_ctx['name']))
+
+    for sym_name in touched_symbols:
+        try:
+            usages = repo.find_symbol_usages(sym_name)
+        except Exception:
+            usages = []
+
+        for u in usages[:20]:
+            u_file = u.get('file')
+            u_line = u.get('line_number')
+            snippet = u.get('snippet') or u.get('line')
+            if not (u_file and snippet):
+                continue
+
+            usage_blob = f'# Usage of `{sym_name}` at {u_file}:{u_line}\n{cast(str, snippet).rstrip()}'
+            assembler.add_search_results(
+                [{'file': u_file, 'code': usage_blob}],
+                query=f'usage of {sym_name}',
+            )
+
+    return assembler.format_context()
