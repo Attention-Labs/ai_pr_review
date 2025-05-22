@@ -17,6 +17,7 @@ dependencies = [
     { name = "pre-commit" },
     { name = "python-dotenv" },
     { name = "ruff" },
+    { name = "structlog" },
     { name = "whatthepatch" },
 ]
 
@@ -27,6 +28,7 @@ requires-dist = [
     { name = "pre-commit", specifier = ">=3.5.0" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "ruff", specifier = ">=0.11.0" },
+    { name = "structlog", specifier = ">=25.3.0" },
     { name = "whatthepatch", specifier = ">=1.0.7" },
 ]
 
@@ -2172,6 +2174,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/be/47/1bba49d42d63f4453f0a64a20acbf2d0bd2f5a8cde6a166ee66c074a08f8/starlette-0.36.3.tar.gz", hash = "sha256:90a671733cfb35771d8cc605e0b679d23b992f8dcfad48cc60b38cb29aeb7080", size = 2842113, upload-time = "2024-02-04T18:16:24.95Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/eb/f7/372e3953b6e6fbfe0b70a1bb52612eae16e943f4288516480860fcd4ac41/starlette-0.36.3-py3-none-any.whl", hash = "sha256:13d429aa93a61dc40bf503e8c801db1f1bca3dc706b10ef2434a36123568f044", size = 71481, upload-time = "2024-02-04T18:16:21.392Z" },
+]
+
+[[package]]
+name = "structlog"
+version = "25.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ff/6a/b0b6d440e429d2267076c4819300d9929563b1da959cf1f68afbcd69fe45/structlog-25.3.0.tar.gz", hash = "sha256:8dab497e6f6ca962abad0c283c46744185e0c9ba900db52a423cb6db99f7abeb", size = 1367514, upload-time = "2025-04-25T16:00:39.167Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f5/52/7a2c7a317b254af857464da3d60a0d3730c44f912f8c510c76a738a207fd/structlog-25.3.0-py3-none-any.whl", hash = "sha256:a341f5524004c158498c3127eecded091eb67d3a611e7a3093deca30db06e172", size = 68240, upload-time = "2025-04-25T16:00:37.295Z" },
 ]
 
 [[package]]
