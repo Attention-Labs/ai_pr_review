@@ -39,6 +39,8 @@ Example:
 python -m ai_pr_review octocat hello-world 42
 ```
 
+Logs are written to `run.log` in structured JSON format using `logkit`.
+
 ## Requirements
 
 - Python 3.11+

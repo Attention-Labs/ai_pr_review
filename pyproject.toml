@@ -49,7 +49,7 @@ docstring-code-format = true
 [tool.basedpyright]
 # scope
 include = ["src"]
-exclude = ["tests", "**/__pycache__"]
+exclude = ["tests", "**/__pycache__", "src/logkit.py"]
 
 # runtime assumptions
 pythonVersion = "3.11"

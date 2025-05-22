@@ -1,11 +1,18 @@
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, cast
+
+from structlog.typing import FilteringBoundLogger
+
+from logkit import capture
+from logkit import log as _log  # type: ignore
 
 from .context import process_pr_context
 from .github import fetch_pr_data
 from .llm import review_with_llm
 from .repo import checkout_pr_head, cleanup_temp_dir, clone_repo_to_temp_dir
+
+log: FilteringBoundLogger = cast(FilteringBoundLogger, _log)
 
 
 def review_pr(
@@ -26,28 +33,33 @@ def review_pr(
 ) -> str:
     """Generate an AI-based review for the pull request."""
     temp_dir: str | None = None
-    try:
-        # Fetch PR data from GitHub
-        diff_text, head_sha, pr_title, pr_description = fetch_pr_data_func(
-            repo_owner, repo_name, pr_number
-        )
+    with capture(work='review_pr'):
+        try:
+            # Fetch PR data from GitHub
+            diff_text, head_sha, pr_title, pr_description = fetch_pr_data_func(
+                repo_owner, repo_name, pr_number
+            )
+            log.info('fetched pr data', owner=repo_owner, repo=repo_name)
 
-        # Clone repository and checkout PR head
-        temp_dir = clone_repo_func(repo_owner, repo_name, keep_temp)
-        checkout_func(temp_dir, head_sha)
+            # Clone repository and checkout PR head
+            temp_dir = clone_repo_func(repo_owner, repo_name, keep_temp)
+            log.info('cloned repo', path=temp_dir)
+            checkout_func(temp_dir, head_sha)
 
-        # Generate context from PR diff and files
-        context_blob = process_context_func(temp_dir, diff_text)
+            # Generate context from PR diff and files
+            context_blob = process_context_func(temp_dir, diff_text)
+            log.info('processed context')
 
-        # Generate PR review using LLM
-        review_text = review_with_llm_func(
-            pr_title,
-            pr_description,
-            context_blob,
-            model=model,
-        )
+            # Generate PR review using LLM
+            review_text = review_with_llm_func(
+                pr_title,
+                pr_description,
+                context_blob,
+                model=model,
+            )
+            log.info('generated review')
 
-        return review_text
-    finally:
-        if temp_dir:
-            cleanup_func(temp_dir, keep_temp)
+            return review_text
+        finally:
+            if temp_dir:
+                cleanup_func(temp_dir, keep_temp)
