@@ -4,3 +4,5 @@
 - Run `uv run pytest -q` to execute the test suite.
 - Run `uv run -m ai_pr_review <repo_owner> <repo_name> <pr_number>` to review a PR.
 - Run `uv run basedpyright` and resolve any reported issues before committing.
+- Install the pre-commit hooks with `pre-commit install` to ensure
+  `AGENTS.md` and `CLAUDE.md` stay synchronized.
