@@ -9,13 +9,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install uv (includes caching)
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.7.6"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install uv
-        run: pip install uv
 
       - name: Install dependencies
         run: uv sync --all-extras
