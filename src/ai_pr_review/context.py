@@ -32,7 +32,7 @@ def _parse_patchset(diff_text: str) -> list[_MiniPatchFile]:
         new_path = diff.header.new_path
         old_path = diff.header.old_path
         file_path = new_path or old_path
-        removed = (new_path in (None, '/dev/null')) or (old_path and not new_path)
+        removed = (new_path in (None, '/dev/null')) or (bool(old_path) and not new_path)
 
         hunks: dict[int, list[Change]] = {}
         if diff.changes:

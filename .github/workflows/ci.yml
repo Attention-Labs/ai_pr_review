@@ -25,6 +25,9 @@ jobs:
       - name: Run pre-commit
         run: uv run pre-commit run --all-files
 
+      - name: Run basedpyright
+        run: uv run basedpyright
+
       - name: Run tests
         run: uv run pytest -q tests
 
